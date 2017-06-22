@@ -19,7 +19,7 @@ object IndexConsoleUI {
 
   case class Index(config: IndexConfig) extends Console[Try[Unit]]
 
-  case class Search(config: SearchConfig) extends Console[Try[Seq[String]]]
+  case class Search(config: SearchConfig) extends Console[Try[Set[String]]]
 
   object ConsoleFree {
     def getParameters(args: Array[String]): Free[Console, CodeIndexConfig] = Free.liftF(GetParameters(args))
@@ -28,7 +28,7 @@ object IndexConsoleUI {
 
     def index(config: IndexConfig): Free[Console, Try[Unit]] = Free.liftF(Index(config))
 
-    def search(config: SearchConfig): Free[Console, Try[Seq[String]]] = Free.liftF(Search(config))
+    def search(config: SearchConfig): Free[Console, Try[Set[String]]] = Free.liftF(Search(config))
   }
 
   sealed trait CodeIndexConfig

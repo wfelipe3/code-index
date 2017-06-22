@@ -4,6 +4,10 @@ import java.io.File
 
 import cats.{Id, ~>}
 import com.codeindex.console.pure.IndexConsoleUI.{CodeIndexConfig, Console, EmptyIndexConfig, ErrorIndexConfig, GetParameters, Index, IndexConfig, Println, Search, SearchConfig}
+import com.codeindex.storage.json.JsonIndex
+import com.codeindex.storage.{FileConnection, FileStorage, InMemoryConnection, InMemoryStorage}
+
+import scala.util.{Failure, Success}
 
 /**
   * Created by feliperojas on 6/19/17.
@@ -16,9 +20,21 @@ object ConsoleInterpreters {
       case Println(a) =>
         println(a).asInstanceOf[A]
       case Index(indexConfig) =>
-        ().asInstanceOf[A]
+        FileStorage.load(FileConnection(indexConfig.indexFile))
+          .flatMap(s => JsonIndex.decode(s))
+          .flatMap(ji => JsonIndex.addIndex(ji)(indexConfig.words, indexConfig.value))
+          .flatMap(JsonIndex.encode)
+          .flatMap(s => FileStorage.save(FileConnection(indexConfig.indexFile), s))
+          .fold(s => Failure(new Exception(s)), Success(_))
+          .asInstanceOf[A]
+
       case Search(searchConfig) =>
-        ().asInstanceOf[A]
+        FileStorage.load(FileConnection(searchConfig.indexFile))
+          .flatMap(s => JsonIndex.decode(s))
+          .map(ji => JsonIndex.search(ji)(searchConfig.word))
+          .fold(s => Failure(new Exception(s)), Success(_))
+          .asInstanceOf[A]
+
     }
   }
 

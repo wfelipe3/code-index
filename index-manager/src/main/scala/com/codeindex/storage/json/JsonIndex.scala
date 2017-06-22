@@ -8,17 +8,21 @@ import io.circe.syntax._
   */
 object JsonIndex {
 
-  type Index = Map[String, Map[String, Seq[String]]]
+  type Index = Map[String, Map[String, Set[String]]]
 
   def addIndex(index: Index)(words: Seq[String], value: String): Either[String, Index] = {
     if (!index.contains("keys"))
       Left("no keys attribute found")
     else
-      Right(Map("keys" -> words.foldLeft(index.getOrElse("keys", Map.empty[String, Seq[String]])) { (i, w) =>
-        val v = i.get(w).map(s => value +: s).getOrElse(Seq(value))
-        i + (w -> v.sorted)
+      Right(Map("keys" -> words.foldLeft(index.getOrElse("keys", Map.empty[String, Set[String]])) { (i, w) =>
+        val v: Set[String] = i.get(w).map(s => s + value).getOrElse(Set(value))
+        i + (w -> v)
       }))
   }
+
+  def search(index: Index)(term: String): Set[String] =
+    index.getOrElse("keys", Map.empty[String, Set[String]]).getOrElse(term, Set.empty[String])
+
 
   def decode(value: String): Either[String, Index] = {
     parse(value)

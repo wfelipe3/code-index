@@ -18,13 +18,20 @@ object MainApp extends App {
   private def processConfig(c: CodeIndexConfig) = {
     c match {
       case c@IndexConfig(_, _, _) =>
-        ConsoleFree.index(c).flatMap(v => v
-          .map(_ => ConsoleFree.println("index correctly"))
-          .getOrElse(ConsoleFree.println("error")))
+        ConsoleFree.index(c).flatMap { v =>
+          v.map(_ => ConsoleFree.println("index correctly"))
+            .recover {
+              case e: Exception => ConsoleFree.println(e.getMessage)
+            }
+            .getOrElse(ConsoleFree.println("error"))
+        }
 
       case s@SearchConfig(_, _) =>
         ConsoleFree.search(s).flatMap(v => v
           .map(s => ConsoleFree.println(s.mkString("\n")))
+          .recover {
+            case e: Exception => ConsoleFree.println(e.getMessage)
+          }
           .getOrElse(ConsoleFree.println("Error")))
 
       case e@EmptyIndexConfig => ConsoleFree.println("no command selected")
